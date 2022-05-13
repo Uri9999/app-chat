@@ -3,7 +3,21 @@
         <div id="container">
             <aside>
                 <header>
-                    <input type="text" placeholder="search">
+                    <!-- <input type="text" placeholder="search"> -->
+                    <div class="user">
+                        <div class="img">
+                            <!-- <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_10.jpg" alt=""> -->
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_01.jpg" alt="">
+
+
+                        </div>
+                        <div class="info">
+                            <h2>{{ currentUserName }}</h2>
+                            <h3>
+                                <button @click="logOut()">Logout</button>
+                            </h3>
+                        </div>
+                    </div>
                 </header>
                 <ul>
                     <li v-for="item in searchUsers" :key="item.id" v-show="item.id != currentUserId"
@@ -12,29 +26,24 @@
                         <div>
                             <h2>{{ item.name }}</h2>
                             <h3>
-                                <span class="status orange"></span>
-                                offline
+                                <span class="status green"></span>
+                                online
                             </h3>
                         </div>
                     </li>
                 </ul>
             </aside>
             <main>
-                <header>
-                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_01.jpg" alt="">
+                <header v-if="userChatBox">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_10.jpg" alt="">
+
                     <div>
-                        <h2>Chat with Vincent Porter</h2>
+                        <h2>Chat with {{ userChatBox }}</h2>
                         <h3>already 1902 messages</h3>
                     </div>
                     <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_star.png" alt="">
                 </header>
-                <Box :currentPeerUser="currentPeerUser"></Box>
-                <footer>
-                    <textarea placeholder="Type your message"></textarea>
-                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_picture.png" alt="">
-                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_file.png" alt="">
-                    <a href="#">Send</a>
-                </footer>
+                <Box :currentPeerUser="currentPeerUser" v-if="currentPeerUser"></Box>
             </main>
         </div>
     </div>
@@ -55,9 +64,12 @@ export default {
             currentUserId: localStorage.getItem("id"),
             currentUserPhoto: localStorage.getItem("photoURL"),
             searchUsers: [],
-            photoURL: localStorage.getItem("photoURL")
+            photoURL: localStorage.getItem("photoURL"),
+            userChatBox: '',
+            userUrlChatBox: '',
         }
     },
+
     methods: {
         async getUserList() {
             const result = await firebase
@@ -65,10 +77,8 @@ export default {
                 .collection("users")
                 .get();
             if (result.docs.length > 0) {
-                let listUsers = [];
-                listUsers = [...result.docs];
+                let listUsers = result.docs;
                 listUsers.forEach((item, index) => {
-                    console.log("item", item.data());
                     this.searchUsers.push({
                         key: index,
                         documentKey: item.id,
@@ -80,18 +90,29 @@ export default {
                 });
             }
         },
+
         letsChat(item) {
-            console.log(item.id);
             this.currentPeerUser = item;
+            this.userChatBox = item.name;
+            this.userUrlChatBox = item.URL;
         },
+
+        logOut() {
+            firebase.auth().signOut().then(() => {
+                localStorage.clear();
+                this.$router.push({ name: 'Login' });
+            }).catch(error => {
+                alert(error.message);
+            });;
+        }
     },
     created() {
+        if (!localStorage.hasOwnProperty("id")) this.$router.push({ name: "Login" });
         this.getUserList();
     }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 * {
     box-sizing: border-box;
@@ -110,6 +131,19 @@ body {
     font-size: 0;
     border-radius: 5px;
     overflow: hidden;
+}
+
+.user {
+    display: flex;
+    background-color: rgb(68, 72, 83);
+}
+
+.user .img {
+    padding-right: 20px;
+}
+
+.user .info {
+    color: rgb(255, 255, 255);
 }
 
 aside {

@@ -1,6 +1,6 @@
 <template>
   <div class="login">
-    <form style="border: 1px solid #ccc">
+    <form style="border: 1px solid #ccc" id="formLogin">
       <div class="container">
         <h1>Login</h1>
         <p>Please fill in this form to create an account.</p>
@@ -41,7 +41,7 @@ export default {
       auth
         .signInWithEmailAndPassword(this.email, this.password)
         .then(async res => {
-          console.log(res);
+          console.log('uid', res.user.uid);
           if (res.user) {
             await firebase
               .firestore()
@@ -49,17 +49,17 @@ export default {
               .where("id", "==", res.user.uid)
               .get()
               .then(querySnapshot => {
-                console.log("query", querySnapshot);
-                querySnapshot.forEach(doc => {
-                  let userData = doc.data();
+                let userData = querySnapshot.docs[0].data();
+                // querySnapshot.forEach(doc => {
+                  // let userData = doc.data();
                   localStorage.setItem("id", userData.id);
                   localStorage.setItem("name", userData.name);
                   localStorage.setItem("email", userData.email);
                   localStorage.setItem("password", userData.password);
                   localStorage.setItem("photoURL", userData.URL);
                   localStorage.setItem("description", userData.description);
-                  localStorage.setItem("FirebaseDocumentId", doc.id);
-                });
+                  localStorage.setItem("FirebaseDocumentId", querySnapshot.docs[0].id);
+                // });
               });
             this.$router.push({ name: 'Chat' });
           }
@@ -68,6 +68,9 @@ export default {
           console.log(err);
         });
     }
+  },
+  created() {
+    if (localStorage.getItem("id")) this.$router.push({ name: 'Chat' });
   },
 };
 </script>
@@ -79,6 +82,11 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+#formLogin {
+  width: 425px;
+  margin: 0 auto;
 }
 
 /* Full-width input fields */

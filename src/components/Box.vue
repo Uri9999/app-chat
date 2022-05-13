@@ -1,7 +1,7 @@
 <template>
     <div class="box">
         <ul id="chat">
-            <li class="text-inner" :class="item.idFrom === currentUserId ? 'you' : 'me'" v-for="item in listMessage"
+            <li class="text-inner" :class="item.idFrom === currentUserId ? 'me' : 'you'" v-for="item in listMessage"
                 :key="item.id">
                 <div class="entete">
                     <span class="status green"></span>
@@ -10,10 +10,10 @@
                 </div>
                 <div class="triangle"></div>
                 <div class="message">
-                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
+                    {{ item.content }}
                 </div>
             </li>
-            <li class="me">
+            <!-- <li class="me">
                 <div class="entete">
                     <h3>10:12AM, Today</h3>
                     <h2>Vincent</h2>
@@ -23,12 +23,21 @@
                 <div class="message">
                     Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
                 </div>
-            </li>
+            </li> -->
         </ul>
+        <footer>
+            <textarea placeholder="Type your message" v-model="inputValue"
+                @keyup.enter="sendMessage(inputValue)"></textarea>
+            <!-- <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_picture.png" alt="">
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_file.png" alt=""> -->
+            <a href="#" @click.prevent="sendMessage(inputValue)">Send</a>
+        </footer>
     </div>
 </template>
 
 <script>
+import firebase from '../services/firebase';
+import moment from 'moment'
 export default {
     props: ["currentPeerUser"],
     data() {
@@ -42,6 +51,7 @@ export default {
             groupChatId: null
         }
     },
+
     watch: {
         currentPeerUser: function (newVal, oldVal) {
             if (newVal !== oldVal) {
@@ -49,6 +59,7 @@ export default {
             }
         }
     },
+
     methods: {
         sendMessage(content) {
             if (content.trim() === "") {
@@ -75,10 +86,10 @@ export default {
                     this.inputValue = "";
                 });
         },
+
         getMessages() {
             console.log("call coming");
             this.listMessage = [];
-            // here we are creating a room
             let groupChatId = `${this.currentPeerUser.id} + ${this.currentUserId}`;
             firebase
                 .firestore()
@@ -92,7 +103,6 @@ export default {
                             this.listMessage.push(res.doc.data());
                         });
                     } else {
-                        console.log("call cmng 1");
                         this.groupChatId = `${this.currentUserId} + ${this.currentPeerUser.id}`;
                         firebase
                             .firestore()
@@ -101,23 +111,24 @@ export default {
                             .collection(this.groupChatId)
                             .onSnapshot(Snapshot => {
                                 Snapshot.docChanges().forEach(res => {
-                                    console.log("res", res);
                                     if (res.type === "added") {
+                                        console.log(1);
                                         this.listMessage.push(res.doc.data());
                                     }
                                 });
                             });
                     }
                 });
-        }
+        },
     },
+
     mounted() {
+        if (!localStorage.hasOwnProperty("id")) this.$router.push({ name: "Login" });
         this.getMessages();
     }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #chat {
     padding-left: 0;
@@ -185,5 +196,42 @@ export default {
 #chat .me .triangle {
     border-color: transparent transparent #6fbced transparent;
     margin-left: 375px;
+}
+
+footer {
+    height: 155px;
+    padding: 20px 30px 10px 20px;
+}
+
+footer textarea {
+    resize: none;
+    border: none;
+    display: block;
+    width: 90%;
+    /* height: 80px; */
+    border-radius: 3px;
+    padding: 20px;
+    font-size: 13px;
+    margin-bottom: 13px;
+}
+
+footer textarea::placeholder {
+    color: #ddd;
+}
+
+footer img {
+    height: 30px;
+    cursor: pointer;
+}
+
+footer a {
+    text-decoration: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #6fbced;
+    vertical-align: top;
+    margin-left: 333px;
+    margin-top: 5px;
+    display: inline-block;
 }
 </style>

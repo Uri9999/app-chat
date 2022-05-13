@@ -1,6 +1,6 @@
 <template>
   <div class="signup">
-    <form style="border: 1px solid #ccc">
+    <form style="border: 1px solid #ccc" id="formRegister">
       <div class="container">
         <h1>Sign up</h1>
         <p>Please fill in this form to create an account.</p>
@@ -82,6 +82,11 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+#formRegister {
+  width: 425px;
+  margin: 0 auto;
 }
 
 /* Full-width input fields */
