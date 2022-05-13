@@ -27,7 +27,7 @@
                             <h2>{{ item.name }}</h2>
                             <h3>
                                 <span class="status green"></span>
-                                online
+                                read
                             </h3>
                         </div>
                     </li>
@@ -43,7 +43,8 @@
                     </div>
                     <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_star.png" alt="">
                 </header>
-                <Box :currentPeerUser="currentPeerUser" v-if="currentPeerUser"></Box>
+                <Box :currentPeerUser="currentPeerUser" v-if="currentPeerUser" @updateStatusMessage="updateStatusUser">
+                </Box>
             </main>
         </div>
     </div>
@@ -104,7 +105,11 @@ export default {
             }).catch(error => {
                 alert(error.message);
             });;
-        }
+        },
+
+        updateStatusUser(user) {
+        },
+
     },
     created() {
         if (!localStorage.hasOwnProperty("id")) this.$router.push({ name: "Login" });

@@ -5,31 +5,16 @@
                 :key="item.id">
                 <div class="entete">
                     <span class="status green"></span>
-                    <h2>Vincent</h2>
-                    <h3>10:12AM, Today</h3>
+                    <h3>{{ item.id | formatDateTime }}</h3>
                 </div>
                 <div class="triangle"></div>
                 <div class="message">
                     {{ item.content }}
                 </div>
             </li>
-            <!-- <li class="me">
-                <div class="entete">
-                    <h3>10:12AM, Today</h3>
-                    <h2>Vincent</h2>
-                    <span class="status blue"></span>
-                </div>
-                <div class="triangle"></div>
-                <div class="message">
-                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.
-                </div>
-            </li> -->
         </ul>
         <footer>
-            <textarea placeholder="Type your message" v-model="inputValue"
-                @keyup.enter="sendMessage(inputValue)"></textarea>
-            <!-- <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_picture.png" alt="">
-            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_file.png" alt=""> -->
+            <textarea placeholder="Type your message" v-model="inputValue"></textarea>
             <a href="#" @click.prevent="sendMessage(inputValue)">Send</a>
         </footer>
     </div>
@@ -90,7 +75,9 @@ export default {
         getMessages() {
             console.log("call coming");
             this.listMessage = [];
-            let groupChatId = `${this.currentPeerUser.id} + ${this.currentUserId}`;
+            // let groupChatId = `${this.currentPeerUser.id} + ${this.currentUserId}`;
+            let groupChatId = [this.currentPeerUser.id, this.currentUserId]
+            groupChatId = groupChatId.sort().join('+');
             firebase
                 .firestore()
                 .collection("Messages")
@@ -98,12 +85,16 @@ export default {
                 .collection(groupChatId)
                 .onSnapshot(Snapshot => {
                     if (Snapshot.docChanges().length > 0) {
+                        console.log('> 0 group', this.groupChatId);
+                        console.log('length > 0');
                         this.groupChatId = groupChatId;
                         Snapshot.docChanges().forEach(res => {
                             this.listMessage.push(res.doc.data());
+                            this.$emit('updateStatusMessage', res.doc.data())
                         });
                     } else {
-                        this.groupChatId = `${this.currentUserId} + ${this.currentPeerUser.id}`;
+                        let groupChatId = [this.currentPeerUser.id, this.currentUserId]
+                        this.groupChatId = groupChatId.sort().join('+');
                         firebase
                             .firestore()
                             .collection("Messages")
@@ -111,20 +102,29 @@ export default {
                             .collection(this.groupChatId)
                             .onSnapshot(Snapshot => {
                                 Snapshot.docChanges().forEach(res => {
-                                    if (res.type === "added") {
-                                        console.log(1);
-                                        this.listMessage.push(res.doc.data());
-                                    }
+                                    console.log('< 0 group', this.groupChatId);
+                                    console.log('length < 0');
+                                    // if (res.type === "added") { 
+                                    this.listMessage.push(res.doc.data());
+                                    // }
+                                    this.$emit('updateStatusMessage', res.doc.data())
                                 });
                             });
                     }
                 });
         },
+
+        createGroupId(peerUserId, currentUserId) {
+            let groupChatId = [peerUserId, currentUserId]
+            return groupChatId.sort().join('+');
+        }
     },
 
     mounted() {
         if (!localStorage.hasOwnProperty("id")) this.$router.push({ name: "Login" });
         this.getMessages();
+        console.log(this.listMessage);
+        console.log(this.currentUserId);
     }
 }
 </script>
@@ -208,7 +208,6 @@ footer textarea {
     border: none;
     display: block;
     width: 90%;
-    /* height: 80px; */
     border-radius: 3px;
     padding: 20px;
     font-size: 13px;
